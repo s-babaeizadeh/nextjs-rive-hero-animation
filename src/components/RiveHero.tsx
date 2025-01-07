@@ -52,17 +52,11 @@ export default function RiveHero() {
   // which may crop certain parts of the artboard
   useEffect(() => {
     if (rive) {
-      if (lgQuery) {
-        rive!.layout = new Layout({
-          fit: Fit.Contain,
-          alignment: Alignment.Center,
-        });
-      } else {
-        rive!.layout = new Layout({
-          fit: Fit.Cover,
-          alignment: Alignment.Center,
-        });
-      }
+      const layout = lgQuery
+        ? new Layout({ fit: Fit.Contain, alignment: Alignment.Center })
+        : new Layout({ fit: Fit.Cover, alignment: Alignment.Center });
+
+      rive.layout = layout; // Ensure this line is effectively doing something.
     }
   }, [rive, lgQuery]);
 
@@ -83,14 +77,14 @@ export default function RiveHero() {
     if (rive && canvasRef && canvasContainerRef) {
       const resizeObserver = new ResizeObserver(
         throttle(() => {
-          //Get the block size
           if (rive && canvasContainerRef) {
             const newWidth = canvasContainerRef.clientWidth;
             const newHeight = canvasContainerRef.clientHeight;
-            // From 500px to 1200px, scale the numSize input on a scale of 0-100%
-            if (newWidth <= 1200 && numSize) {
-              const resizeRange = 1200 - 500;
-              numSize!.value = ((1200 - newWidth) / resizeRange) * 100;
+            if (newWidth <= 1200) {
+              if (numSize) {
+                const resizeRange = 1200 - 500;
+                numSize.value = ((1200 - newWidth) / resizeRange) * 100;
+              }
             }
             const dpr = window.devicePixelRatio;
             if (
@@ -105,8 +99,8 @@ export default function RiveHero() {
               setLastHeight(newCanvasHeight);
               canvasRef.style.width = `${newWidth}px`;
               canvasRef.style.height = `${newHeight}px`;
-              rive!.resizeToCanvas();
-              rive!.startRendering();
+              rive.resizeToCanvas();
+              rive.startRendering();
             }
           }
         }, 0)
@@ -116,10 +110,7 @@ export default function RiveHero() {
 
       return () => resizeObserver.unobserve(canvasRef);
     }
-    // numSize does not need to be added because we're simply setting its internal value
-    // rather than using any reactive state
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rive, canvasRef, canvasContainerRef, lastWidth, lastHeight]);
+  }, [rive, canvasRef, canvasContainerRef, lastWidth, lastHeight, numSize]); // Add numSize to the dependencies
 
   // Drive the mouse positon inputs for the state machine based on cursor mouse movement position
   const onMouseMove: MouseEventHandler<HTMLDivElement> = (
